@@ -1,220 +1,262 @@
-(function(){
-'use strict';
-const _0x0000=document.getElementById('_0x0000');
-function _0x0027(){
-if(window.scrollY>0x28){
-_0x0000.classList.add('scrolled');
-}else{
-_0x0000.classList.remove('scrolled');
-}
-}
-document.addEventListener('scroll',_0x0027,{passive:true});
-_0x0027();
-const _0x0001=document.getElementById('_0x0001');
-if(_0x0001){
-_0x0001.addEventListener('click',()=>{
-const _0x0002=document.documentElement.getAttribute('data-theme');
-const _0x0003=_0x0002==='light'?'dark':'light';
-document.documentElement.setAttribute('data-theme',_0x0003);
-localStorage.setItem('tapcard-theme',_0x0003);
-});
-}
-const _0x0004=document.getElementById('_0x0004');
-const _0x0005=document.getElementById('hero');
-let _0x0006=0,gy=0,tx=0,ty=0;
-document.addEventListener('mousemove',e=>{
-const _0x0007=_0x0005.getBoundingClientRect();
-const _0x0008=_0x0004.getBoundingClientRect();
-const _0x0009=_0x0007.top+_0x0007.height*0.3;
-if(e.clientY>=_0x0009&&e.clientY<=_0x0007.bottom){
-tx=e.clientX-_0x0008.left;
-ty=e.clientY-_0x0008.top;
-}else{
-tx=_0x0008.width/2;
-ty=_0x0008.height*0.3;
-}
-});
-(function _0x0028(){
-_0x0006+=(tx-_0x0006)*0.08;
-gy+=(ty-gy)*0.08;
-_0x0004.style.setProperty('--mx',_0x0006+'_0x000E');
-_0x0004.style.setProperty('--my',gy+'_0x000E');
-requestAnimationFrame(_0x0028);
+(function () {
+  'use strict';
+
+  // Nav background on scroll
+  const topNav = document.getElementById('topNav');
+  function updateNav() {
+    if (window.scrollY > 40) {
+      topNav.classList.add('scrolled');
+    } else {
+      topNav.classList.remove('scrolled');
+    }
+  }
+  document.addEventListener('scroll', updateNav, { passive: true });
+  updateNav();
+
+  // Theme toggle
+  const themeToggle = document.getElementById('themeToggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('tapcard-theme', next);
+    });
+  }
+
+  // Hero grid spotlight
+  const heroGrid = document.getElementById('heroGrid');
+  const heroEl = document.getElementById('hero');
+  let gx = 0, gy = 0, tx = 0, ty = 0;
+
+  document.addEventListener('mousemove', e => {
+    const rect = heroEl.getBoundingClientRect();
+    const gridRect = heroGrid.getBoundingClientRect();
+    const activeTop = rect.top + rect.height * 0.3;
+
+    if (e.clientY >= activeTop && e.clientY <= rect.bottom) {
+      tx = e.clientX - gridRect.left;
+      ty = e.clientY - gridRect.top;
+    } else {
+      tx = gridRect.width / 2;
+      ty = gridRect.height * 0.3;
+    }
+  });
+
+  (function lerpGrid() {
+    gx += (tx - gx) * 0.08;
+    gy += (ty - gy) * 0.08;
+    heroGrid.style.setProperty('--mx', gx + 'px');
+    heroGrid.style.setProperty('--my', gy + 'px');
+    requestAnimationFrame(lerpGrid);
+  })();
+
+  // 3D card tilt, follows the cursor within the hero stage
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const heroStage = document.getElementById('heroStage');
+  const cardTilt = document.getElementById('cardTilt');
+  const BASE_RX = 10, BASE_RY = -18;
+
+  if (heroStage && cardTilt && !reduceMotion) {
+    heroStage.addEventListener('mousemove', e => {
+      const rect = heroStage.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width;
+      const py = (e.clientY - rect.top) / rect.height;
+      const rx = BASE_RX - (py - 0.5) * 24;
+      const ry = BASE_RY + (px - 0.5) * 28;
+      cardTilt.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    });
+
+    heroStage.addEventListener('mouseleave', () => {
+      cardTilt.style.transform = `rotateX(${BASE_RX}deg) rotateY(${BASE_RY}deg)`;
+    });
+  }
+
+  // Click either card to bring it to the front
+  const cardGroup = document.getElementById('cardGroup');
+  if (cardGroup) {
+    const cards = cardGroup.querySelectorAll('.nfc-card');
+    function bringToFront(card) {
+      cards.forEach(c => c.classList.toggle('is-front', c === card));
+      cardGroup.classList.add('has-front');
+    }
+    cards.forEach(card => {
+      card.addEventListener('click', () => bringToFront(card));
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          bringToFront(card);
+        }
+      });
+    });
+  }
+
+  // Scrollspy: highlight the nav link for the section in view
+  const navLinks = Array.from(document.querySelectorAll('.nav-links a'));
+  const sections = navLinks
+    .map(link => document.querySelector(link.getAttribute('href')))
+    .filter(Boolean);
+
+  if (sections.length && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = '#' + entry.target.id;
+          navLinks.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === id);
+          });
+        }
+      });
+    }, { rootMargin: '-45% 0px -45% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+  }
 })();
-const _0x000A=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
-const _0x000B=document.getElementById('_0x000B');
-const _0x000C=document.getElementById('_0x000C');
-const _0x000D=0xA,BASE_RY=-0x12;
-if(_0x000B&&_0x000C&&!_0x000A){
-_0x000B.addEventListener('mousemove',e=>{
-const _0x0007=_0x000B.getBoundingClientRect();
-const _0x000E=(e.clientX-_0x0007.left)/_0x0007.width;
-const _0x000F=(e.clientY-_0x0007.top)/_0x0007.height;
-const _0x0010=_0x000D-(_0x000F-0.5)*0x18;
-const _0x0011=BASE_RY+(_0x000E-0.5)*0x1C;
-_0x000C.style.transform=`rotateX(${_0x0010}deg)rotateY(${_0x0011}deg)`;
+
+/* ===== PRICING CARDS -> ORDER FORM ===== */
+document.querySelectorAll('.pricing-card').forEach(card => {
+  function selectPackage() {
+    const value = card.getAttribute('data-package');
+    const radio = document.querySelector(`input[name="package"][value="${value}"]`);
+    if (radio) radio.checked = true;
+
+    const orderSection = document.getElementById('order');
+    if (orderSection) orderSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const pill = radio ? radio.closest('.package-pill') : null;
+    if (pill) {
+      pill.classList.add('flash');
+      setTimeout(() => pill.classList.remove('flash'), 900);
+    }
+  }
+
+  card.addEventListener('click', selectPackage);
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      selectPackage();
+    }
+  });
 });
-_0x000B.addEventListener('mouseleave',()=>{
-_0x000C.style.transform=`rotateX(${_0x000D}deg)rotateY(${BASE_RY}deg)`;
-});
+
+/* ===== ORDER FORM ===== */
+// Get a free access key at https://web3forms.com (just enter your email,
+// no account or password needed) and paste it below.
+const WEB3FORMS_ACCESS_KEY = '4806b2b9-ffc1-4a56-b9ae-9a805d59058d';
+
+const orderForm = document.getElementById('orderForm');
+if (orderForm) {
+  const submitBtn = document.getElementById('orderSubmit');
+  const note = document.getElementById('orderNote');
+  const defaultNote = note ? note.textContent : '';
+
+  orderForm.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    if (WEB3FORMS_ACCESS_KEY === 'YOUR_ACCESS_KEY_HERE') {
+      if (note) {
+        note.textContent = 'Order form isn\'t connected yet — add your Web3Forms access key in script.js.';
+        note.classList.add('is-error');
+      }
+      return;
+    }
+
+    const name = orderForm.querySelector('#orderName').value.trim();
+    const pkg = orderForm.querySelector('input[name="package"]:checked').value;
+    const message = orderForm.querySelector('#orderMessage').value.trim();
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    if (note) {
+      note.textContent = '';
+      note.classList.remove('is-success', 'is-error');
+    }
+
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_ACCESS_KEY,
+          subject: `NFC card order — ${pkg}`,
+          from_name: 'TapCard order form',
+          name: name,
+          package: pkg,
+          message: message
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        orderForm.reset();
+        if (note) {
+          note.textContent = 'Sent! We\'ll follow up shortly to confirm your order.';
+          note.classList.add('is-success');
+        }
+      } else {
+        throw new Error(result.message || 'Submission failed');
+      }
+    } catch (err) {
+      if (note) {
+        note.textContent = 'Something went wrong sending that — please try again or message us directly below.';
+        note.classList.add('is-error');
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send order details';
+    }
+  });
 }
-const _0x0012=document.getElementById('_0x0012');
-if(_0x0012){
-const _0x0013=_0x0012.querySelectorAll('.nfc-card');
-function _0x0029(card){
-_0x0013.forEach(c=>c.classList.toggle('is-front',c===card));
-_0x0012.classList.add('has-front');
-}
-_0x0013.forEach(card=>{
-card.addEventListener('click',()=>_0x0029(card));
-card.addEventListener('keydown',e=>{
-if(e.key==='Enter'||e.key===' '){
-e.preventDefault();
-_0x0029(card);
-}
-});
-});
-}
-const _0x0014=Array.from(document.querySelectorAll('.nav-links a'));
-const _0x0015=_0x0014
-.map(link=>document.querySelector(link.getAttribute('href')))
-.filter(Boolean);
-if(_0x0015.length&&'IntersectionObserver' in window){
-const _0x0016=new IntersectionObserver(entries=>{
-entries.forEach(entry=>{
-if(entry.isIntersecting){
-const _0x0017='#'+entry.target._0x0017;
-_0x0014.forEach(link=>{
-link.classList.toggle('active',link.getAttribute('href')===_0x0017);
-});
-}
-});
-},{rootMargin:'-0x2D%0px-0x2D%0px'});
-_0x0015.forEach(section=>_0x0016.observe(section));
-}
-})();
-document.querySelectorAll('.pricing-card').forEach(card=>{
-function _0x002A(){
-const _0x0018=card.getAttribute('data-package');
-const _0x0019=document.querySelector(`input[_0x0021="package"][_0x0018="${_0x0018}"]`);
-if(_0x0019)_0x0019.checked=true;
-const _0x001A=document.getElementById('order');
-if(_0x001A)_0x001A.scrollIntoView({behavior:'smooth',block:'start'});
-const _0x001B=_0x0019?_0x0019.closest('.package-_0x001B'):null;
-if(_0x001B){
-_0x001B.classList.add('flash');
-setTimeout(()=>_0x001B.classList.remove('flash'),0x384);
-}
-}
-card.addEventListener('click',_0x002A);
-card.addEventListener('keydown',e=>{
-if(e.key==='Enter'||e.key===' '){
-e.preventDefault();
-_0x002A();
-}
-});
-});
-const _0x001C='4806b2b9-ffc1-4a56-b9ae-9a805d59058d';
-const _0x001D=document.getElementById('_0x001D');
-if(_0x001D){
-const _0x001E=document.getElementById('orderSubmit');
-const _0x001F=document.getElementById('orderNote');
-const _0x0020=_0x001F?_0x001F.textContent:'';
-_0x001D.addEventListener('submit',async e=>{
-e.preventDefault();
-if(_0x001C==='YOUR_ACCESS_KEY_HERE'){
-if(_0x001F){
-_0x001F.textContent='Order form isn\'t connected yet — add your Web3Forms access key in script.js.';
-_0x001F.classList.add('is-error');
-}
-return;
-}
-const _0x0021=_0x001D.querySelector('#orderName')._0x0018.trim();
-const _0x0022=_0x001D.querySelector('input[_0x0021="package"]:checked')._0x0018;
-const _0x0023=_0x001D.querySelector('#orderMessage')._0x0018.trim();
-_0x001E.disabled=true;
-_0x001E.textContent='Sending…';
-if(_0x001F){
-_0x001F.textContent='';
-_0x001F.classList.remove('is-success','is-error');
-}
-try{
-const _0x0024=await fetch('https://api.web3forms.com/submit',{
-method:'POST',
-headers:{'Content-Type':'application/json',Accept:'application/json'},
-body:JSON.stringify({
-access_key:_0x001C,
-subject:`NFC card order — ${_0x0022}`,
-from_name:'TapCard order form',
-_0x0021:_0x0021,
-package:_0x0022,
-_0x0023:_0x0023
-})
-});
-const _0x0025=await _0x0024.json();
-if(_0x0025.success){
-_0x001D.reset();
-if(_0x001F){
-_0x001F.textContent='Sent!We\'ll follow up shortly to confirm your order.';
-_0x001F.classList.add('is-success');
-}
-}else{
-throw new Error(_0x0025._0x0023||'Submission failed');
-}
-}catch(err){
-if(_0x001F){
-_0x001F.textContent='Something went wrong sending that — please try again or _0x0023 us directly below.';
-_0x001F.classList.add('is-error');
-}
-}finally{
-_0x001E.disabled=false;
-_0x001E.textContent='Send order details';
-}
-});
-}
-document.querySelectorAll('.copy-item').forEach(item=>{
-const _0x0018=item.getAttribute('data-copy');
-if(!_0x0018)return;
-function _0x002B(){
-item.classList.add('copied');
-clearTimeout(item._copyTimer);
-item._copyTimer=setTimeout(()=>{
-item.classList.remove('copied');
-},0x578);
-}
-function _0x002C(text){
-const _0x0026=document.createElement('textarea');
-_0x0026._0x0018=text;
-_0x0026.style.position='fixed';
-_0x0026.style.top='-9999px';
-_0x0026.style.opacity='0';
-_0x0026.setAttribute('readonly','');
-document.body.appendChild(_0x0026);
-_0x0026.select();
-_0x0026.setSelectionRange(0,_0x0026._0x0018.length);
-try{
-document.execCommand('copy');
-}catch(e){
-console.warn('Copy failed:',e);
-}
-document.body.removeChild(_0x0026);
-}
-function _0x002D(){
-if(navigator.clipboard&&typeof navigator.clipboard.writeText==='function'){
-navigator.clipboard.writeText(_0x0018).then(_0x002B).catch(()=>{
-_0x002C(_0x0018);
-_0x002B();
-});
-}else{
-_0x002C(_0x0018);
-_0x002B();
-}
-}
-item.addEventListener('click',_0x002D);
-item.addEventListener('keydown',e=>{
-if(e.key==='Enter'||e.key===' '){
-e.preventDefault();
-_0x002D();
-}
-});
+
+/* ===== COPY EMAIL & PHONE ===== */
+document.querySelectorAll('.copy-item').forEach(item => {
+  const value = item.getAttribute('data-copy');
+  if (!value) return;
+
+  function showCopied() {
+    item.classList.add('copied');
+    clearTimeout(item._copyTimer);
+    item._copyTimer = setTimeout(() => {
+      item.classList.remove('copied');
+    }, 1400);
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    ta.style.opacity = '0';
+    ta.setAttribute('readonly', '');
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+    try {
+      document.execCommand('copy');
+    } catch (e) {
+      console.warn('Copy failed:', e);
+    }
+    document.body.removeChild(ta);
+  }
+
+  function doCopy() {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(value).then(showCopied).catch(() => {
+        fallbackCopy(value);
+        showCopied();
+      });
+    } else {
+      fallbackCopy(value);
+      showCopied();
+    }
+  }
+
+  item.addEventListener('click', doCopy);
+  item.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      doCopy();
+    }
+  });
 });
