@@ -876,7 +876,6 @@ html[data-theme="light"] .theme-toggle .icon-moon {
   grid-template-columns: repeat(5, minmax(0, 130px));
   gap: 16px;
   margin-top: 32px;
-  margin-left: 152px;
   justify-content: center;
 }
 
